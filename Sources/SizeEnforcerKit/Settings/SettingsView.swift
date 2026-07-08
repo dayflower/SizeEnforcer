@@ -123,21 +123,23 @@ private struct AppRow: View {
                     showAdd = false
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(!isValid)
+                .disabled(parsedSize == nil)
             }
         }
         .padding()
         .frame(width: 240)
     }
 
-    private var isValid: Bool {
-        guard let w = Int(width), let h = Int(height) else { return false }
-        return w > 0 && h > 0
+    /// The width/height entered in the add form, parsed and validated as
+    /// positive integers, or `nil` if either field is invalid.
+    private var parsedSize: (width: Int, height: Int)? {
+        guard let w = Int(width), let h = Int(height), w > 0, h > 0 else { return nil }
+        return (w, h)
     }
 
     private func addPreset() {
-        guard let w = Int(width), let h = Int(height), w > 0, h > 0 else { return }
-        store.addPreset(bundleID: app.bundleID, displayName: app.displayName, width: w, height: h)
+        guard let size = parsedSize else { return }
+        store.addPreset(bundleID: app.bundleID, displayName: app.displayName, width: size.width, height: size.height)
         width = ""
         height = ""
     }

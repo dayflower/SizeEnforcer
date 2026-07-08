@@ -68,47 +68,55 @@ struct FlowLayout: Layout {
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let maxWidth = proposal.width ?? .infinity
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        let arrangement = arrange(sizes: sizes, maxWidth: maxWidth)
+        let width = maxWidth.isFinite ? maxWidth : arrangement.size.width
+        return CGSize(width: max(0, width), height: arrangement.size.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        let arrangement = arrange(sizes: sizes, maxWidth: bounds.width)
+        for (subview, frame) in zip(subviews, arrangement.frames) {
+            subview.place(
+                at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                anchor: .topLeading,
+                proposal: ProposedViewSize(frame.size)
+            )
+        }
+    }
+
+    /// The result of laying out subviews of the given sizes: each subview's
+    /// frame (origin relative to the layout's top-left) and the total bounding
+    /// size the rows occupy.
+    private struct Arrangement {
+        var frames: [CGRect]
+        var size: CGSize
+    }
+
+    /// Places the given sizes left-to-right, wrapping to a new row whenever the
+    /// next subview would overflow `maxWidth`. Shared by `sizeThatFits` and
+    /// `placeSubviews` so both agree on where rows break.
+    private func arrange(sizes: [CGSize], maxWidth: CGFloat) -> Arrangement {
+        var frames: [CGRect] = []
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
         var maxRowWidth: CGFloat = 0
 
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
+        for size in sizes {
             if x > 0 && x + size.width > maxWidth {
                 maxRowWidth = max(maxRowWidth, x - spacing)
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0
             }
+            frames.append(CGRect(x: x, y: y, width: size.width, height: size.height))
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
         maxRowWidth = max(maxRowWidth, x - spacing)
 
-        let width = maxWidth.isFinite ? maxWidth : maxRowWidth
-        return CGSize(width: max(0, width), height: y + rowHeight)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x > 0 && x + size.width > bounds.width {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            subview.place(
-                at: CGPoint(x: bounds.minX + x, y: bounds.minY + y),
-                anchor: .topLeading,
-                proposal: ProposedViewSize(size)
-            )
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
-        }
+        return Arrangement(frames: frames, size: CGSize(width: max(0, maxRowWidth), height: y + rowHeight))
     }
 }
