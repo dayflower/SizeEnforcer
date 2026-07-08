@@ -1,4 +1,6 @@
 SWIFT ?= swift
+SWIFT_FORMAT ?= xcrun swift-format
+FORMAT_PATHS := Sources Tests
 
 # When only Command Line Tools are installed (no full Xcode), SwiftPM cannot
 # locate the Swift Testing runtime, so fall back to explicit framework/rpath
@@ -11,7 +13,7 @@ TEST_FLAGS := $(if $(HAS_XCODE),,\
 	-Xlinker -rpath -Xlinker "$(DEVELOPER_DIR)/Library/Developer/Frameworks" \
 	-Xlinker -rpath -Xlinker "$(DEVELOPER_DIR)/Library/Developer/usr/lib")
 
-.PHONY: all build release run test app clean
+.PHONY: all build release run test app check fix clean
 
 all: build
 
@@ -34,6 +36,14 @@ test:
 ## app: assemble ./build/SizeEnforcer.app (ad-hoc signed)
 app:
 	scripts/make-app.sh
+
+## check: lint sources with swift-format (no changes)
+check:
+	$(SWIFT_FORMAT) lint --strict --recursive $(FORMAT_PATHS)
+
+## fix: reformat sources in place with swift-format
+fix:
+	$(SWIFT_FORMAT) format --in-place --recursive $(FORMAT_PATHS)
 
 ## clean: remove build artifacts
 clean:
