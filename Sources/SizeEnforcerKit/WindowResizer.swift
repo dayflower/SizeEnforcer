@@ -51,6 +51,33 @@ enum WindowResizer {
 
     // MARK: - Window matching
 
+    /// Maximum positional distance (in points) allowed when matching an
+    /// on-screen window to an AX window, to avoid resizing the wrong window.
+    static let matchTolerance: CGFloat = 10
+
+    /// Returns the index of the position closest to `target`, provided it lies
+    /// within `tolerance`. `nil` entries are skipped. Returns `nil` when there
+    /// are no candidates or the nearest one is farther than `tolerance`.
+    ///
+    /// Pure function, so it is unit-testable.
+    static func bestMatchIndex(
+        positions: [CGPoint?],
+        target: CGPoint,
+        tolerance: CGFloat
+    ) -> Int? {
+        var best: (index: Int, distance: CGFloat)?
+        for (index, position) in positions.enumerated() {
+            guard let position else { continue }
+            let distance = hypot(position.x - target.x, position.y - target.y)
+            if best == nil || distance < best!.distance {
+                best = (index, distance)
+            }
+        }
+
+        guard let match = best, match.distance <= tolerance else { return nil }
+        return match.index
+    }
+
     /// Sets the AX size on each element. Succeeds if at least one is resized.
     private static func setSize(_ size: CGSize, on elements: [AXUIElement]) -> Result {
         var newSize = size
@@ -84,18 +111,16 @@ enum WindowResizer {
         in appElement: AXUIElement,
         bounds: CGRect
     ) -> AXUIElement? {
-        var best: (element: AXUIElement, distance: CGFloat)?
-        for element in axWindows(of: appElement) {
-            guard let position = position(of: element) else { continue }
-            let distance = hypot(position.x - bounds.origin.x, position.y - bounds.origin.y)
-            if best == nil || distance < best!.distance {
-                best = (element, distance)
-            }
-        }
-
-        // Require a close positional match to avoid resizing the wrong window.
-        guard let match = best, match.distance <= 10 else { return nil }
-        return match.element
+        let windows = axWindows(of: appElement)
+        let positions = windows.map { position(of: $0) }
+        guard
+            let index = bestMatchIndex(
+                positions: positions,
+                target: bounds.origin,
+                tolerance: matchTolerance
+            )
+        else { return nil }
+        return windows[index]
     }
 
     private static func position(of element: AXUIElement) -> CGPoint? {

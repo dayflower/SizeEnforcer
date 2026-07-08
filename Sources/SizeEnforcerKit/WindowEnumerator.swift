@@ -13,18 +13,59 @@ struct WindowHit {
 
 /// Enumerates on-screen windows and resolves which one sits under a point.
 enum WindowEnumerator {
-    private struct Entry {
+    /// An eligible on-screen window paired with its window-server layer.
+    ///
+    /// Layer information is retained so callers can distinguish normal windows
+    /// (layer 0) from floating panels and system UI drawn in front of them.
+    struct Entry {
         let info: WindowInfo
         let layer: Int
     }
 
+    /// Parses a single `CGWindowListCopyWindowInfo` entry, applying the
+    /// eligibility filters. Returns `nil` for windows that should be excluded:
+    /// those owned by `selfPID` (our own overlay), effectively invisible ones
+    /// (alpha ~ 0), zero-sized ones, and entries missing required keys.
+    ///
+    /// Pure function, so it is unit-testable with dictionary fixtures.
+    static func entry(from raw: [String: Any], selfPID: pid_t) -> Entry? {
+        guard
+            let pid = raw[kCGWindowOwnerPID as String] as? pid_t,
+            pid != selfPID
+        else { return nil }
+
+        if let alpha = raw[kCGWindowAlpha as String] as? Double, alpha <= 0.01 {
+            return nil
+        }
+
+        guard
+            let windowNumber = raw[kCGWindowNumber as String] as? CGWindowID,
+            let boundsDict = raw[kCGWindowBounds as String] as? NSDictionary,
+            let bounds = CGRect(dictionaryRepresentation: boundsDict)
+        else { return nil }
+
+        if bounds.width <= 0 || bounds.height <= 0 {
+            return nil
+        }
+
+        let layer = raw[kCGWindowLayer as String] as? Int ?? 0
+        let ownerName = raw[kCGWindowOwnerName as String] as? String ?? "(unknown)"
+
+        return Entry(
+            info: WindowInfo(
+                windowNumber: windowNumber,
+                ownerName: ownerName,
+                ownerPID: pid,
+                bounds: bounds
+            ),
+            layer: layer
+        )
+    }
+
     /// Returns eligible on-screen windows in front-to-back order.
     ///
-    /// Windows owned by this process (our overlay), effectively invisible
-    /// windows (alpha ~ 0), and zero-sized windows are excluded. Desktop
-    /// elements are excluded via the query option. Layer information is
-    /// retained so callers can distinguish normal windows (layer 0) from
-    /// floating panels and system UI drawn in front of them.
+    /// Desktop elements are excluded via the query option; the remaining
+    /// per-window filtering is delegated to `entry(from:selfPID:)`.
     private static func entries() -> [Entry] {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         guard
@@ -35,54 +76,17 @@ enum WindowEnumerator {
         }
 
         let selfPID = getpid()
-        var result: [Entry] = []
-
-        for entry in raw {
-            guard
-                let pid = entry[kCGWindowOwnerPID as String] as? pid_t,
-                pid != selfPID
-            else { continue }
-
-            if let alpha = entry[kCGWindowAlpha as String] as? Double, alpha <= 0.01 {
-                continue
-            }
-
-            guard
-                let windowNumber = entry[kCGWindowNumber as String] as? CGWindowID,
-                let boundsDict = entry[kCGWindowBounds as String] as? NSDictionary,
-                let bounds = CGRect(dictionaryRepresentation: boundsDict)
-            else { continue }
-
-            if bounds.width <= 0 || bounds.height <= 0 {
-                continue
-            }
-
-            let layer = entry[kCGWindowLayer as String] as? Int ?? 0
-            let ownerName = entry[kCGWindowOwnerName as String] as? String ?? "(unknown)"
-
-            result.append(
-                Entry(
-                    info: WindowInfo(
-                        windowNumber: windowNumber,
-                        ownerName: ownerName,
-                        ownerPID: pid,
-                        bounds: bounds
-                    ),
-                    layer: layer
-                )
-            )
-        }
-
-        return result
+        return raw.compactMap { entry(from: $0, selfPID: selfPID) }
     }
 
-    /// Returns the front-most normal window under `point` together with the
-    /// windows in front of it that overlap it.
+    /// Resolves the front-most normal window under `point` from `entries`
+    /// (front-to-back order), together with the windows in front of it that
+    /// overlap it.
     ///
     /// `point` must be expressed in flipped global display coordinates
-    /// (top-left origin), matching `CGEvent.location`.
-    static func windowUnderCursor(at point: CGPoint) -> WindowHit? {
-        let entries = entries()
+    /// (top-left origin), matching `CGEvent.location`. Pure function, so it is
+    /// unit-testable.
+    static func windowUnderCursor(in entries: [Entry], at point: CGPoint) -> WindowHit? {
         guard
             let index = entries.firstIndex(where: {
                 $0.layer == 0 && $0.info.bounds.contains(point)
@@ -97,5 +101,14 @@ enum WindowEnumerator {
             .filter { $0.intersects(target.bounds) }
 
         return WindowHit(window: target, occluders: occluders)
+    }
+
+    /// Returns the front-most normal window under `point` together with the
+    /// windows in front of it that overlap it.
+    ///
+    /// `point` must be expressed in flipped global display coordinates
+    /// (top-left origin), matching `CGEvent.location`.
+    static func windowUnderCursor(at point: CGPoint) -> WindowHit? {
+        windowUnderCursor(in: entries(), at: point)
     }
 }
