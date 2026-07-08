@@ -80,7 +80,9 @@ final class PresetStore: ObservableObject {
         guard let data = try? Data(contentsOf: fileURL) else { return }
         do {
             let decoded = try JSONDecoder().decode([AppPresets].self, from: data)
-            apps = Dictionary(uniqueKeysWithValues: decoded.map { ($0.bundleID, $0) })
+            // Tolerate duplicate bundle IDs (from hand edits or older files) by
+            // keeping the last occurrence rather than crashing.
+            apps = Dictionary(decoded.map { ($0.bundleID, $0) }, uniquingKeysWith: { _, last in last })
         } catch {
             appLogger.error("Failed to load presets: \(error.localizedDescription, privacy: .public)")
         }
