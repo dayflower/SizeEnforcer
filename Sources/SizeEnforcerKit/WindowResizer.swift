@@ -1,6 +1,37 @@
 import AppKit
 import ApplicationServices
 
+/// The window-resize operations that `SelectionMenuController` depends on,
+/// abstracted so it can be exercised without the Accessibility API in tests.
+@MainActor
+protocol WindowResizing {
+    /// Whether this process is currently trusted for Accessibility.
+    var hasAccessibilityPermission: Bool { get }
+    /// Prompts the user to grant Accessibility permission.
+    func requestAccessibilityPermission()
+    /// Resizes a single window, keeping its top-left position unchanged.
+    func resize(_ window: WindowInfo, to size: CGSize) -> WindowResizer.Result
+    /// Resizes every window of the app with `pid`.
+    func resizeAllWindows(ofPID pid: pid_t, to size: CGSize) -> WindowResizer.Result
+}
+
+/// Default `WindowResizing` implementation backed by the real Accessibility API.
+struct SystemWindowResizer: WindowResizing {
+    var hasAccessibilityPermission: Bool { WindowResizer.hasAccessibilityPermission }
+
+    func requestAccessibilityPermission() {
+        WindowResizer.requestAccessibilityPermission()
+    }
+
+    func resize(_ window: WindowInfo, to size: CGSize) -> WindowResizer.Result {
+        WindowResizer.resize(window, to: size)
+    }
+
+    func resizeAllWindows(ofPID pid: pid_t, to size: CGSize) -> WindowResizer.Result {
+        WindowResizer.resizeAllWindows(ofPID: pid, to: size)
+    }
+}
+
 /// Resizes windows of other applications via the Accessibility API.
 enum WindowResizer {
     enum Result {

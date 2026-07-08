@@ -6,14 +6,24 @@ import AppKit
 @MainActor
 final class SelectionMenuController: NSObject, NSMenuDelegate {
     private let store: PresetStore
+    private let resizer: WindowResizing
+    private let presentAlert: @MainActor (_ title: String, _ message: String) -> Void
     private let onOpenSettings: () -> Void
 
     // Context for the currently shown menu.
     private var window: WindowInfo?
     private var identity: AppIdentity?
 
-    init(store: PresetStore, onOpenSettings: @escaping () -> Void) {
+    init(
+        store: PresetStore,
+        resizer: WindowResizing = SystemWindowResizer(),
+        presentAlert: @escaping @MainActor (_ title: String, _ message: String) -> Void
+            = SelectionMenuController.runModalAlert,
+        onOpenSettings: @escaping () -> Void
+    ) {
         self.store = store
+        self.resizer = resizer
+        self.presentAlert = presentAlert
         self.onOpenSettings = onOpenSettings
     }
 
@@ -86,7 +96,7 @@ final class SelectionMenuController: NSObject, NSMenuDelegate {
         settingsItem.target = self
         menu.addItem(settingsItem)
 
-        if !WindowResizer.hasAccessibilityPermission {
+        if !resizer.hasAccessibilityPermission {
             menu.addItem(.separator())
             let note = NSMenuItem(
                 title: "⚠ Accessibility permission required to resize",
@@ -104,27 +114,33 @@ final class SelectionMenuController: NSObject, NSMenuDelegate {
 
     @objc private func applyPreset(_ sender: NSMenuItem) {
         guard let window, let preset = sender.representedObject as? SizePreset else { return }
-        let size = CGSize(width: preset.width, height: preset.height)
-
         // Holding Shift applies the size to every window of the same app.
         let allWindows = NSEvent.modifierFlags.contains(.shift)
+        performResize(preset, on: window, allWindows: allWindows)
+    }
+
+    /// Applies `preset` to `window` (or all of the app's windows) and reports
+    /// any failure through the injected resizer/alert. Pulled out of the menu
+    /// action so the result branches can be exercised in tests.
+    func performResize(_ preset: SizePreset, on window: WindowInfo, allWindows: Bool) {
+        let size = CGSize(width: preset.width, height: preset.height)
         let result = allWindows
-            ? WindowResizer.resizeAllWindows(ofPID: window.ownerPID, to: size)
-            : WindowResizer.resize(window, to: size)
+            ? resizer.resizeAllWindows(ofPID: window.ownerPID, to: size)
+            : resizer.resize(window, to: size)
 
         switch result {
         case .success:
             break
         case .notPermitted:
-            WindowResizer.requestAccessibilityPermission()
+            resizer.requestAccessibilityPermission()
             presentAlert(
-                title: "Accessibility permission required",
-                message: "Enable SizeEnforcer in System Settings > Privacy & Security > Accessibility."
+                "Accessibility permission required",
+                "Enable SizeEnforcer in System Settings > Privacy & Security > Accessibility."
             )
         case .windowNotFound:
-            presentAlert(title: "Could not resize", message: "The target window could not be located.")
+            presentAlert("Could not resize", "The target window could not be located.")
         case .failed:
-            presentAlert(title: "Could not resize", message: "Failed to change the window size.")
+            presentAlert("Could not resize", "Failed to change the window size.")
         }
     }
 
@@ -144,7 +160,8 @@ final class SelectionMenuController: NSObject, NSMenuDelegate {
 
     // MARK: - Helpers
 
-    private func presentAlert(title: String, message: String) {
+    /// Default alert presenter: shows a modal `NSAlert`.
+    static func runModalAlert(title: String, message: String) {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
