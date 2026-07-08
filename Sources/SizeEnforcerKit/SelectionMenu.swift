@@ -17,8 +17,8 @@ final class SelectionMenuController: NSObject, NSMenuDelegate {
     init(
         store: PresetStore,
         resizer: WindowResizing = SystemWindowResizer(),
-        presentAlert: @escaping @MainActor (_ title: String, _ message: String) -> Void
-            = SelectionMenuController.runModalAlert,
+        presentAlert: @escaping @MainActor (_ title: String, _ message: String) -> Void =
+            SelectionMenuController.runModalAlert,
         onOpenSettings: @escaping () -> Void
     ) {
         self.store = store
@@ -124,7 +124,8 @@ final class SelectionMenuController: NSObject, NSMenuDelegate {
     /// action so the result branches can be exercised in tests.
     func performResize(_ preset: SizePreset, on window: WindowInfo, allWindows: Bool) {
         let size = CGSize(width: preset.width, height: preset.height)
-        let result = allWindows
+        let result =
+            allWindows
             ? resizer.resizeAllWindows(ofPID: window.ownerPID, to: size)
             : resizer.resize(window, to: size)
 

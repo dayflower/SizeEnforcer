@@ -90,7 +90,7 @@ final class RecorderButton: NSButton {
                 onCapture?(captured)
                 stopRecording()
             }
-            // Otherwise a bare key with no modifier — ignore and keep recording.
+        // Otherwise a bare key with no modifier — ignore and keep recording.
         }
     }
 

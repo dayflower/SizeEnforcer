@@ -100,8 +100,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Menu title showing the app's marketing version, e.g. "SizeEnforcer 0.1.0".
     /// Falls back to just the name when run without a bundle (e.g. `swift run`).
     private func appVersionTitle() -> String {
-        let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "SizeEnforcer"
-        guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+        let name =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "SizeEnforcer"
+        guard
+            let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+                as? String
+        else {
             return name
         }
         return "\(name) \(version)"

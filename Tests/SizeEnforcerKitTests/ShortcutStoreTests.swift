@@ -19,7 +19,8 @@ struct ShortcutStoreTests {
     func persistsAcrossInstances() {
         withDefaults { defaults in
             let store = ShortcutStore(defaults: defaults)
-            store.shortcut = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_R), carbonModifiers: UInt32(cmdKey | optionKey))
+            store.shortcut = HotKeyShortcut(
+                keyCode: UInt32(kVK_ANSI_R), carbonModifiers: UInt32(cmdKey | optionKey))
 
             let reloaded = ShortcutStore(defaults: defaults)
             #expect(reloaded.shortcut == store.shortcut)
@@ -30,7 +31,8 @@ struct ShortcutStoreTests {
     func settingNilRemovesStoredValue() {
         withDefaults { defaults in
             let store = ShortcutStore(defaults: defaults)
-            store.shortcut = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_R), carbonModifiers: UInt32(cmdKey))
+            store.shortcut = HotKeyShortcut(
+                keyCode: UInt32(kVK_ANSI_R), carbonModifiers: UInt32(cmdKey))
             store.shortcut = nil
 
             #expect(defaults.data(forKey: "pickWindowShortcut") == nil)

@@ -143,7 +143,7 @@ struct WindowEnumeratorTests {
     @Test
     func returnsNilWhenNoWindowUnderCursor() {
         let entries = [
-            entry(pid: 1, bounds: CGRect(x: 0, y: 0, width: 100, height: 100), layer: 0),
+            entry(pid: 1, bounds: CGRect(x: 0, y: 0, width: 100, height: 100), layer: 0)
         ]
         let hit = WindowEnumerator.windowUnderCursor(in: entries, at: CGPoint(x: 500, y: 500))
         #expect(hit == nil)

@@ -9,7 +9,8 @@ struct ScreenGeometryTests {
     func flipsYAgainstPrimaryHeight() {
         let primaryHeight: CGFloat = 1000
         let flipped = CGRect(x: 100, y: 200, width: 300, height: 150)
-        let converted = ScreenGeometry.appKitRect(fromFlipped: flipped, primaryHeight: primaryHeight)
+        let converted = ScreenGeometry.appKitRect(
+            fromFlipped: flipped, primaryHeight: primaryHeight)
 
         #expect(converted.origin.x == 100)
         // y = height - originY - height(of rect) = 1000 - 200 - 150 = 650

@@ -64,7 +64,8 @@ struct SelectionMenuControllerTests {
         var alerts: [(String, String)] = []
         let controller = makeController(resizer: resizer) { alerts.append(($0, $1)) }
 
-        controller.performResize(SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
+        controller.performResize(
+            SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
 
         #expect(resizer.resizeCalls.count == 1)
         #expect(resizer.resizeCalls.first?.size == CGSize(width: 640, height: 480))
@@ -78,7 +79,8 @@ struct SelectionMenuControllerTests {
         var alerts: [(String, String)] = []
         let controller = makeController(resizer: resizer) { alerts.append(($0, $1)) }
 
-        controller.performResize(SizePreset(width: 800, height: 600), on: makeWindow(), allWindows: true)
+        controller.performResize(
+            SizePreset(width: 800, height: 600), on: makeWindow(), allWindows: true)
 
         #expect(resizer.resizeAllCalls.count == 1)
         #expect(resizer.resizeAllCalls.first?.pid == 42)
@@ -93,7 +95,8 @@ struct SelectionMenuControllerTests {
         var alerts: [(String, String)] = []
         let controller = makeController(resizer: resizer) { alerts.append(($0, $1)) }
 
-        controller.performResize(SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
+        controller.performResize(
+            SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
 
         #expect(resizer.requestPermissionCount == 1)
         #expect(alerts.count == 1)
@@ -107,7 +110,8 @@ struct SelectionMenuControllerTests {
         var alerts: [(String, String)] = []
         let controller = makeController(resizer: resizer) { alerts.append(($0, $1)) }
 
-        controller.performResize(SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
+        controller.performResize(
+            SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
 
         #expect(resizer.requestPermissionCount == 0)
         #expect(alerts.count == 1)
@@ -121,7 +125,8 @@ struct SelectionMenuControllerTests {
         var alerts: [(String, String)] = []
         let controller = makeController(resizer: resizer) { alerts.append(($0, $1)) }
 
-        controller.performResize(SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
+        controller.performResize(
+            SizePreset(width: 640, height: 480), on: makeWindow(), allWindows: false)
 
         #expect(alerts.count == 1)
         #expect(alerts.first?.0 == "Could not resize")

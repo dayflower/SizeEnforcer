@@ -116,7 +116,9 @@ enum WindowResizer {
 
         var anySuccess = false
         for element in elements {
-            if AXUIElementSetAttributeValue(element, kAXSizeAttribute as CFString, value) == .success {
+            if AXUIElementSetAttributeValue(element, kAXSizeAttribute as CFString, value)
+                == .success
+            {
                 anySuccess = true
             }
         }

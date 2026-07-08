@@ -19,7 +19,8 @@ final class GeneralSettingsStore: ObservableObject {
         if defaults.object(forKey: Self.excludeOccludedKey) == nil {
             _excludeOccludedAreas = Published(initialValue: true)
         } else {
-            _excludeOccludedAreas = Published(initialValue: defaults.bool(forKey: Self.excludeOccludedKey))
+            _excludeOccludedAreas = Published(
+                initialValue: defaults.bool(forKey: Self.excludeOccludedKey))
         }
     }
 }

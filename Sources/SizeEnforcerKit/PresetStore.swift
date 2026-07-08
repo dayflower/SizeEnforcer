@@ -19,7 +19,9 @@ final class PresetStore: ObservableObject {
 
     /// Apps that have at least one preset, sorted by display name.
     var sortedApps: [AppPresets] {
-        apps.values.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+        apps.values.sorted {
+            $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+        }
     }
 
     func presets(forBundleID bundleID: String) -> [SizePreset] {
@@ -31,7 +33,8 @@ final class PresetStore: ObservableObject {
     /// Adds a preset for the app, creating the app entry if needed. The display
     /// name is refreshed to the most recently seen value.
     func addPreset(bundleID: String, displayName: String, width: Int, height: Int) {
-        var entry = apps[bundleID] ?? AppPresets(bundleID: bundleID, displayName: displayName, presets: [])
+        var entry =
+            apps[bundleID] ?? AppPresets(bundleID: bundleID, displayName: displayName, presets: [])
         entry.displayName = displayName
         entry.presets.append(SizePreset(width: width, height: height))
         apps[bundleID] = entry
@@ -69,9 +72,11 @@ final class PresetStore: ObservableObject {
     // MARK: - Persistence
 
     private static func defaultFileURL() -> URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let base =
+            FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser
-        return base
+        return
+            base
             .appendingPathComponent("SizeEnforcer", isDirectory: true)
             .appendingPathComponent("presets.json", isDirectory: false)
     }
@@ -82,9 +87,11 @@ final class PresetStore: ObservableObject {
             let decoded = try JSONDecoder().decode([AppPresets].self, from: data)
             // Tolerate duplicate bundle IDs (from hand edits or older files) by
             // keeping the last occurrence rather than crashing.
-            apps = Dictionary(decoded.map { ($0.bundleID, $0) }, uniquingKeysWith: { _, last in last })
+            apps = Dictionary(
+                decoded.map { ($0.bundleID, $0) }, uniquingKeysWith: { _, last in last })
         } catch {
-            appLogger.error("Failed to load presets: \(error.localizedDescription, privacy: .public)")
+            appLogger.error(
+                "Failed to load presets: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -100,7 +107,8 @@ final class PresetStore: ObservableObject {
             let data = try encoder.encode(list)
             try data.write(to: fileURL, options: .atomic)
         } catch {
-            appLogger.error("Failed to save presets: \(error.localizedDescription, privacy: .public)")
+            appLogger.error(
+                "Failed to save presets: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

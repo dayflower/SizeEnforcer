@@ -11,7 +11,8 @@ struct SizesPane: View {
             ContentUnavailableView(
                 "No Sizes Yet",
                 systemImage: "macwindow",
-                description: Text("Pick a window from the menu bar and register its size to see it here.")
+                description: Text(
+                    "Pick a window from the menu bar and register its size to see it here.")
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -139,7 +140,9 @@ private struct AppRow: View {
 
     private func addPreset() {
         guard let size = parsedSize else { return }
-        store.addPreset(bundleID: app.bundleID, displayName: app.displayName, width: size.width, height: size.height)
+        store.addPreset(
+            bundleID: app.bundleID, displayName: app.displayName, width: size.width,
+            height: size.height)
         width = ""
         height = ""
     }
@@ -180,8 +183,10 @@ struct GeneralPane: View {
             } header: {
                 Text("Options")
             } footer: {
-                Text("Skip regions covered by other windows when highlighting the window under the cursor.")
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Skip regions covered by other windows when highlighting the window under the cursor."
+                )
+                .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

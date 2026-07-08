@@ -16,7 +16,8 @@ final class ShortcutStore: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         if let data = defaults.data(forKey: key),
-           let decoded = try? JSONDecoder().decode(HotKeyShortcut.self, from: data) {
+            let decoded = try? JSONDecoder().decode(HotKeyShortcut.self, from: data)
+        {
             _shortcut = Published(initialValue: decoded)
         } else {
             _shortcut = Published(initialValue: nil)

@@ -18,7 +18,8 @@ struct PresetStoreTests {
     @Test
     func addPresetCreatesNewApp() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
 
         let presets = store.presets(forBundleID: "com.example.App")
         #expect(presets.count == 1)
@@ -29,8 +30,10 @@ struct PresetStoreTests {
     @Test
     func addPresetAppendsToExistingApp() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1920, height: 1080)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1920, height: 1080)
 
         #expect(store.presets(forBundleID: "com.example.App").count == 2)
     }
@@ -38,8 +41,10 @@ struct PresetStoreTests {
     @Test
     func addPresetRefreshesDisplayName() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Old Name", width: 1280, height: 800)
-        store.addPreset(bundleID: "com.example.App", displayName: "New Name", width: 1920, height: 1080)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Old Name", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "New Name", width: 1920, height: 1080)
 
         #expect(store.apps["com.example.App"]?.displayName == "New Name")
     }
@@ -47,7 +52,8 @@ struct PresetStoreTests {
     @Test
     func removePresetDeletesAppWhenLastPresetRemoved() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
         let id = store.presets(forBundleID: "com.example.App")[0].id
 
         store.removePreset(bundleID: "com.example.App", id: id)
@@ -58,8 +64,10 @@ struct PresetStoreTests {
     @Test
     func removePresetKeepsAppWhenOtherPresetsRemain() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1920, height: 1080)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1920, height: 1080)
         let id = store.presets(forBundleID: "com.example.App")[0].id
 
         store.removePreset(bundleID: "com.example.App", id: id)
@@ -70,7 +78,8 @@ struct PresetStoreTests {
     @Test
     func removeAppDropsAllPresets() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
 
         store.removeApp(bundleID: "com.example.App")
 
@@ -80,7 +89,8 @@ struct PresetStoreTests {
     @Test
     func updateDisplayNameRefreshesExistingApp() {
         let store = PresetStore(fileURL: makeTempFileURL())
-        store.addPreset(bundleID: "com.example.App", displayName: "Old Name", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Old Name", width: 1280, height: 800)
 
         store.updateDisplayName(bundleID: "com.example.App", displayName: "New Name")
 
@@ -113,7 +123,8 @@ struct PresetStoreTests {
     func persistsAcrossInstances() {
         let fileURL = makeTempFileURL()
         let store = PresetStore(fileURL: fileURL)
-        store.addPreset(bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
+        store.addPreset(
+            bundleID: "com.example.App", displayName: "Example", width: 1280, height: 800)
 
         let reloaded = PresetStore(fileURL: fileURL)
         #expect(reloaded.presets(forBundleID: "com.example.App").count == 1)
@@ -148,11 +159,11 @@ struct PresetStoreTests {
             withIntermediateDirectories: true
         )
         let json = """
-        [
-          { "bundleID": "com.example.App", "displayName": "First", "presets": [] },
-          { "bundleID": "com.example.App", "displayName": "Second", "presets": [] }
-        ]
-        """
+            [
+              { "bundleID": "com.example.App", "displayName": "First", "presets": [] },
+              { "bundleID": "com.example.App", "displayName": "Second", "presets": [] }
+            ]
+            """
         try Data(json.utf8).write(to: fileURL)
 
         let store = PresetStore(fileURL: fileURL)

@@ -122,7 +122,8 @@ final class PickerOverlayView: NSView {
 
         // A blue tint blended toward white, similar to the macOS screenshot
         // selection highlight.
-        let tint = NSColor.systemBlue.blended(withFraction: 0.4, of: .white)
+        let tint =
+            NSColor.systemBlue.blended(withFraction: 0.4, of: .white)
             ?? NSColor.systemBlue
         tint.withAlphaComponent(0.35).setFill()
         path.fill()

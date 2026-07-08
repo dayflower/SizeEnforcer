@@ -110,7 +110,8 @@ final class SettingsWindowController: NSObject, NSToolbarDelegate {
     }
 
     private func frame(for contentSize: NSSize, in window: NSWindow) -> NSRect {
-        let frameSize = window.frameRect(forContentRect: NSRect(origin: .zero, size: contentSize)).size
+        let frameSize = window.frameRect(forContentRect: NSRect(origin: .zero, size: contentSize))
+            .size
         var frame = window.frame
         frame.origin.y += frame.height - frameSize.height
         frame.size = frameSize

@@ -29,7 +29,9 @@ struct HoverIconButtonStyle: ButtonStyle {
                 .frame(width: 22, height: 22)
                 .background(
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.primary.opacity(configuration.isPressed ? 0.18 : (hovering ? 0.1 : 0)))
+                        .fill(
+                            Color.primary.opacity(
+                                configuration.isPressed ? 0.18 : (hovering ? 0.1 : 0)))
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 5))
                 .onHover { hovering = $0 }
@@ -74,7 +76,9 @@ struct FlowLayout: Layout {
         return CGSize(width: max(0, width), height: arrangement.size.height)
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    func placeSubviews(
+        in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
+    ) {
         let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
         let arrangement = arrange(sizes: sizes, maxWidth: bounds.width)
         for (subview, frame) in zip(subviews, arrangement.frames) {
@@ -117,6 +121,7 @@ struct FlowLayout: Layout {
         }
         maxRowWidth = max(maxRowWidth, x - spacing)
 
-        return Arrangement(frames: frames, size: CGSize(width: max(0, maxRowWidth), height: y + rowHeight))
+        return Arrangement(
+            frames: frames, size: CGSize(width: max(0, maxRowWidth), height: y + rowHeight))
     }
 }

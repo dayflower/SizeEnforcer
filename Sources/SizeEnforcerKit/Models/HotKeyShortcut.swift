@@ -39,8 +39,8 @@ extension NSEvent.ModifierFlags {
     }
 }
 
-private extension HotKeyShortcut {
-    static func modifierSymbols(_ carbon: UInt32) -> String {
+extension HotKeyShortcut {
+    fileprivate static func modifierSymbols(_ carbon: UInt32) -> String {
         var symbols = ""
         if carbon & UInt32(controlKey) != 0 { symbols += "⌃" }
         if carbon & UInt32(optionKey) != 0 { symbols += "⌥" }
@@ -49,13 +49,13 @@ private extension HotKeyShortcut {
         return symbols
     }
 
-    static func keyName(_ keyCode: UInt32) -> String {
+    fileprivate static func keyName(_ keyCode: UInt32) -> String {
         if let name = specialKeyNames[Int(keyCode)] { return name }
         return character(for: keyCode)?.uppercased() ?? "�"
     }
 
     /// Non-printable keys that `UCKeyTranslate` cannot render usefully.
-    static let specialKeyNames: [Int: String] = [
+    fileprivate static let specialKeyNames: [Int: String] = [
         kVK_Return: "⏎",
         kVK_Tab: "⇥",
         kVK_Space: "Space",
@@ -76,13 +76,16 @@ private extension HotKeyShortcut {
     ]
 
     /// Layout-aware character produced by a key, for display purposes.
-    static func character(for keyCode: UInt32) -> String? {
-        guard let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
-              let layoutPointer = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else {
+    fileprivate static func character(for keyCode: UInt32) -> String? {
+        guard
+            let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
+            let layoutPointer = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)
+        else {
             return nil
         }
         let layoutData = unsafeBitCast(layoutPointer, to: CFData.self)
-        let layout = unsafeBitCast(CFDataGetBytePtr(layoutData), to: UnsafePointer<UCKeyboardLayout>.self)
+        let layout = unsafeBitCast(
+            CFDataGetBytePtr(layoutData), to: UnsafePointer<UCKeyboardLayout>.self)
 
         var deadKeyState: UInt32 = 0
         var length = 0
