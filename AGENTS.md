@@ -13,51 +13,33 @@ are stored per application, keyed by bundle identifier.
 
 ## Build, run, and package
 
-```sh
-swift build            # debug build
-swift run              # build and launch
-swift build -c release # release build
-swift test             # run the SizeEnforcerKitTests suite
+The Makefile is the canonical entry point:
 
-scripts/make-app.sh          # assemble ./build/SizeEnforcer.app (ad-hoc signed)
-scripts/make-app.sh <dir>    # choose an output directory
+```sh
+make build     # debug build
+make run       # build and launch
+make release   # release build
+make test      # run the SizeEnforcerKitTests suite
+make check     # lint with swift-format (no changes)
+make fix       # reformat sources in place with swift-format
+make app       # assemble ./build/SizeEnforcer.app (ad-hoc signed)
 ```
 
 - Toolchain: Swift 6, targeting macOS 14 (Sonoma) or later.
-- Tests use **Swift Testing** and live in `Tests/SizeEnforcerKitTests/`. `swift
-  test` works out of the box with a full Xcode toolchain. With **Command Line
-  Tools only** (no Xcode), SwiftPM cannot locate the Swift Testing runtime, so
-  pass the framework/rpath flags: `swift test -Xswiftc -F -Xswiftc
-  "$(xcode-select -p)/Library/Developer/Frameworks" -Xlinker -rpath -Xlinker
-  "$(xcode-select -p)/Library/Developer/Frameworks" -Xlinker -rpath -Xlinker
-  "$(xcode-select -p)/Library/Developer/usr/lib"`.
+- Tests use **Swift Testing**. With **Command Line Tools only** (no Xcode),
+  plain `swift test` cannot locate the Swift Testing runtime; `make test`
+  detects this and adds the required framework/rpath flags automatically.
 - Also verify UI/OS-integration changes by building and running the app.
-- VS Code launch configs live in `.vscode/launch.json` (Debug / Release).
+- `scripts/make-app.sh <dir>` assembles the `.app` into a custom directory.
 
 ## Layout
 
 - `Sources/SizeEnforcer/` — executable target; `main.swift` only, which calls
   `sizeEnforcerMain()` from the Kit.
-- `Sources/SizeEnforcerKit/` — library target holding all app logic (so tests can
-  `@testable import` it). `sizeEnforcerMain()` is the only `public` symbol; the
-  rest stays `internal`.
-  - `SizeEnforcerMain.swift` — entry point; sets `.accessory` activation policy.
-  - `AppDelegate.swift` — menu-bar controller; owns the status item, stores, and
-    the window picker.
-  - `WindowPicker.swift`, `PickerOverlay*.swift` — interactive cursor-based
-    window selection and its overlay/highlight.
-  - `WindowEnumerator.swift`, `WindowInfo.swift` — enumerate on-screen windows.
-  - `WindowResizer.swift` — performs the resize via the Accessibility API;
-    also owns Accessibility permission checks/prompts.
-  - `AppIdentity.swift` — resolves the per-app grouping key (bundle ID, with a
-    fallback to the window owner name).
-  - `PresetStore.swift`, `ShortcutStore.swift`, `GeneralSettingsStore.swift` —
-    persistence (`ObservableObject`, JSON in Application Support / UserDefaults).
-  - `HotKeyCenter.swift` — global hotkey registration.
-  - `SelectionMenu.swift` — the popup that offers registered sizes after a pick.
-  - `RegionMath.swift`, `ScreenGeometry.swift` — geometry helpers.
-  - `Models/` — value types (`SizePreset`, `HotKeyShortcut`).
-  - `Settings/` — SwiftUI settings window and components.
+- `Sources/SizeEnforcerKit/` — library target holding all app logic (so tests
+  can `@testable import` it). `sizeEnforcerMain()` is the only `public` symbol;
+  the rest stays `internal`. Value types live in `Models/`, the SwiftUI
+  settings window in `Settings/`.
 - `Tests/SizeEnforcerKitTests/` — Swift Testing suite for `SizeEnforcerKit`.
 - `scripts/make-app.sh` — builds a release binary and wraps it in a `.app`.
 - `notes/` — design notes (Japanese).
@@ -79,3 +61,4 @@ scripts/make-app.sh <dir>    # choose an output directory
   written in **English**.
 - Commit messages follow Conventional Commits, without a `(scope)`; keep the
   title to a single line.
+- Run `make check` (swift-format lint) before committing.
