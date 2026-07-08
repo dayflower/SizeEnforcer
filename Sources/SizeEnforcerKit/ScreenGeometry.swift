@@ -22,14 +22,21 @@ enum ScreenGeometry {
     }
 
     /// Converts a rect from flipped global display coordinates (top-left origin)
-    /// to AppKit global coordinates (bottom-left origin).
-    static func appKitRect(fromFlipped rect: CGRect) -> CGRect {
-        let height = primaryDisplayHeight
-        return CGRect(
+    /// to AppKit global coordinates (bottom-left origin), relative to the primary
+    /// display height. Pure function, so it is unit-testable.
+    static func appKitRect(fromFlipped rect: CGRect, primaryHeight: CGFloat) -> CGRect {
+        CGRect(
             x: rect.origin.x,
-            y: height - rect.origin.y - rect.height,
+            y: primaryHeight - rect.origin.y - rect.height,
             width: rect.width,
             height: rect.height
         )
+    }
+
+    /// Converts a rect from flipped global display coordinates (top-left origin)
+    /// to AppKit global coordinates (bottom-left origin), using the current
+    /// primary display height.
+    static func appKitRect(fromFlipped rect: CGRect) -> CGRect {
+        appKitRect(fromFlipped: rect, primaryHeight: primaryDisplayHeight)
     }
 }
