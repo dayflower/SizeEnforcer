@@ -17,19 +17,31 @@ are stored per application, keyed by bundle identifier.
 swift build            # debug build
 swift run              # build and launch
 swift build -c release # release build
+swift test             # run the SizeEnforcerKitTests suite
 
 scripts/make-app.sh          # assemble ./build/SizeEnforcer.app (ad-hoc signed)
 scripts/make-app.sh <dir>    # choose an output directory
 ```
 
 - Toolchain: Swift 6, targeting macOS 14 (Sonoma) or later.
-- There is no test target yet; verify changes by building and running the app.
+- Tests use **Swift Testing** and live in `Tests/SizeEnforcerKitTests/`. `swift
+  test` works out of the box with a full Xcode toolchain. With **Command Line
+  Tools only** (no Xcode), SwiftPM cannot locate the Swift Testing runtime, so
+  pass the framework/rpath flags: `swift test -Xswiftc -F -Xswiftc
+  "$(xcode-select -p)/Library/Developer/Frameworks" -Xlinker -rpath -Xlinker
+  "$(xcode-select -p)/Library/Developer/Frameworks" -Xlinker -rpath -Xlinker
+  "$(xcode-select -p)/Library/Developer/usr/lib"`.
+- Also verify UI/OS-integration changes by building and running the app.
 - VS Code launch configs live in `.vscode/launch.json` (Debug / Release).
 
 ## Layout
 
-- `Sources/SizeEnforcer/` — all app source.
-  - `main.swift` — entry point; sets `.accessory` activation policy.
+- `Sources/SizeEnforcer/` — executable target; `main.swift` only, which calls
+  `sizeEnforcerMain()` from the Kit.
+- `Sources/SizeEnforcerKit/` — library target holding all app logic (so tests can
+  `@testable import` it). `sizeEnforcerMain()` is the only `public` symbol; the
+  rest stays `internal`.
+  - `SizeEnforcerMain.swift` — entry point; sets `.accessory` activation policy.
   - `AppDelegate.swift` — menu-bar controller; owns the status item, stores, and
     the window picker.
   - `WindowPicker.swift`, `PickerOverlay*.swift` — interactive cursor-based
@@ -46,6 +58,7 @@ scripts/make-app.sh <dir>    # choose an output directory
   - `RegionMath.swift`, `ScreenGeometry.swift` — geometry helpers.
   - `Models/` — value types (`SizePreset`, `HotKeyShortcut`).
   - `Settings/` — SwiftUI settings window and components.
+- `Tests/SizeEnforcerKitTests/` — Swift Testing suite for `SizeEnforcerKit`.
 - `scripts/make-app.sh` — builds a release binary and wraps it in a `.app`.
 - `notes/` — design notes (Japanese).
 

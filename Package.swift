@@ -7,9 +7,19 @@ let package = Package(
         .macOS(.v14)
     ],
     targets: [
+        .target(
+            name: "SizeEnforcerKit",
+            path: "Sources/SizeEnforcerKit"
+        ),
         .executableTarget(
             name: "SizeEnforcer",
+            dependencies: ["SizeEnforcerKit"],
             path: "Sources/SizeEnforcer"
+        ),
+        .testTarget(
+            name: "SizeEnforcerKitTests",
+            dependencies: ["SizeEnforcerKit"],
+            path: "Tests/SizeEnforcerKitTests"
         )
     ]
 )
