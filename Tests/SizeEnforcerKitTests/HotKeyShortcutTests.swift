@@ -55,6 +55,34 @@ struct HotKeyShortcutTests {
         #expect(space.displayString == "⌃Space")
     }
 
+    // MARK: keyEquivalent
+
+    @Test
+    func keyEquivalentUsesControlCharactersForSpecialKeys() {
+        let ret = HotKeyShortcut(keyCode: UInt32(kVK_Return), carbonModifiers: UInt32(cmdKey))
+        #expect(ret.keyEquivalent == "\r")
+
+        let escape = HotKeyShortcut(keyCode: UInt32(kVK_Escape), carbonModifiers: UInt32(cmdKey))
+        #expect(escape.keyEquivalent == "\u{1B}")
+
+        let up = HotKeyShortcut(keyCode: UInt32(kVK_UpArrow), carbonModifiers: UInt32(cmdKey))
+        #expect(up.keyEquivalent == String(UnicodeScalar(UInt16(NSUpArrowFunctionKey))!))
+
+        let f5 = HotKeyShortcut(keyCode: UInt32(kVK_F5), carbonModifiers: UInt32(cmdKey))
+        #expect(f5.keyEquivalent == String(UnicodeScalar(UInt16(NSF5FunctionKey))!))
+    }
+
+    @Test
+    func keyEquivalentModifierMaskMatchesCarbonModifiers() {
+        let all = UInt32(cmdKey) | UInt32(optionKey) | UInt32(controlKey) | UInt32(shiftKey)
+        let shortcut = HotKeyShortcut(keyCode: UInt32(kVK_Return), carbonModifiers: all)
+        #expect(shortcut.keyEquivalentModifierMask == [.command, .option, .control, .shift])
+
+        let single = HotKeyShortcut(
+            keyCode: UInt32(kVK_Return), carbonModifiers: UInt32(optionKey))
+        #expect(single.keyEquivalentModifierMask == .option)
+    }
+
     // MARK: Codable
 
     @Test

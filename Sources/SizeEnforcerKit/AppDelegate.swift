@@ -6,6 +6,7 @@ import Combine
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
+    private var resizeMenuItem: NSMenuItem?
     private let picker = WindowPicker()
     private let store = PresetStore()
     private let shortcutStore = ShortcutStore()
@@ -35,11 +36,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         versionItem.isEnabled = false
         menu.addItem(versionItem)
         menu.addItem(.separator())
-        menu.addItem(
+        let resizeItem = menu.addItem(
             withTitle: "Resize window…",
             action: #selector(pickWindow),
             keyEquivalent: ""
-        ).target = self
+        )
+        resizeItem.target = self
+        resizeMenuItem = resizeItem
         menu.addItem(
             withTitle: "Settings…",
             action: #selector(openSettings),
@@ -71,6 +74,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         } else {
             HotKeyCenter.shared.unregister()
+        }
+        updateResizeMenuItemShortcut(shortcut)
+    }
+
+    /// Mirrors the global hotkey next to "Resize window…". Display only: the
+    /// Carbon registration in `applyShortcut` does the actual triggering.
+    private func updateResizeMenuItemShortcut(_ shortcut: HotKeyShortcut?) {
+        guard let item = resizeMenuItem else { return }
+        if let shortcut, let key = shortcut.keyEquivalent {
+            item.keyEquivalent = key
+            item.keyEquivalentModifierMask = shortcut.keyEquivalentModifierMask
+        } else {
+            item.keyEquivalent = ""
+            item.keyEquivalentModifierMask = []
         }
     }
 

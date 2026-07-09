@@ -25,6 +25,25 @@ struct HotKeyShortcut: Codable, Equatable {
     var displayString: String {
         Self.modifierSymbols(carbonModifiers) + Self.keyName(keyCode)
     }
+
+    /// `NSMenuItem.keyEquivalent` string for this shortcut, or `nil` when the
+    /// current keyboard layout produces no character for the key.
+    var keyEquivalent: String? {
+        if let special = Self.specialKeyEquivalents[Int(keyCode)] { return special }
+        // Lowercased so Shift is expressed via the modifier mask, not the character.
+        return Self.character(for: keyCode)?.lowercased()
+    }
+
+    /// Cocoa modifier mask matching `carbonModifiers`, for
+    /// `NSMenuItem.keyEquivalentModifierMask`.
+    var keyEquivalentModifierMask: NSEvent.ModifierFlags {
+        var flags: NSEvent.ModifierFlags = []
+        if carbonModifiers & UInt32(cmdKey) != 0 { flags.insert(.command) }
+        if carbonModifiers & UInt32(optionKey) != 0 { flags.insert(.option) }
+        if carbonModifiers & UInt32(controlKey) != 0 { flags.insert(.control) }
+        if carbonModifiers & UInt32(shiftKey) != 0 { flags.insert(.shift) }
+        return flags
+    }
 }
 
 extension NSEvent.ModifierFlags {
@@ -74,6 +93,41 @@ extension HotKeyShortcut {
         kVK_F5: "F5", kVK_F6: "F6", kVK_F7: "F7", kVK_F8: "F8",
         kVK_F9: "F9", kVK_F10: "F10", kVK_F11: "F11", kVK_F12: "F12",
     ]
+
+    /// Keys whose menu key equivalent is a control or function-key character
+    /// rather than what `UCKeyTranslate` yields.
+    fileprivate static let specialKeyEquivalents: [Int: String] = [
+        kVK_Return: "\r",
+        kVK_Tab: "\t",
+        kVK_Space: " ",
+        kVK_Delete: "\u{08}",
+        kVK_ForwardDelete: functionKeyEquivalent(NSDeleteFunctionKey),
+        kVK_Escape: "\u{1B}",
+        kVK_LeftArrow: functionKeyEquivalent(NSLeftArrowFunctionKey),
+        kVK_RightArrow: functionKeyEquivalent(NSRightArrowFunctionKey),
+        kVK_UpArrow: functionKeyEquivalent(NSUpArrowFunctionKey),
+        kVK_DownArrow: functionKeyEquivalent(NSDownArrowFunctionKey),
+        kVK_Home: functionKeyEquivalent(NSHomeFunctionKey),
+        kVK_End: functionKeyEquivalent(NSEndFunctionKey),
+        kVK_PageUp: functionKeyEquivalent(NSPageUpFunctionKey),
+        kVK_PageDown: functionKeyEquivalent(NSPageDownFunctionKey),
+        kVK_F1: functionKeyEquivalent(NSF1FunctionKey),
+        kVK_F2: functionKeyEquivalent(NSF2FunctionKey),
+        kVK_F3: functionKeyEquivalent(NSF3FunctionKey),
+        kVK_F4: functionKeyEquivalent(NSF4FunctionKey),
+        kVK_F5: functionKeyEquivalent(NSF5FunctionKey),
+        kVK_F6: functionKeyEquivalent(NSF6FunctionKey),
+        kVK_F7: functionKeyEquivalent(NSF7FunctionKey),
+        kVK_F8: functionKeyEquivalent(NSF8FunctionKey),
+        kVK_F9: functionKeyEquivalent(NSF9FunctionKey),
+        kVK_F10: functionKeyEquivalent(NSF10FunctionKey),
+        kVK_F11: functionKeyEquivalent(NSF11FunctionKey),
+        kVK_F12: functionKeyEquivalent(NSF12FunctionKey),
+    ]
+
+    fileprivate static func functionKeyEquivalent(_ code: Int) -> String {
+        String(UnicodeScalar(UInt16(code))!)
+    }
 
     /// Layout-aware character produced by a key, for display purposes.
     fileprivate static func character(for keyCode: UInt32) -> String? {
