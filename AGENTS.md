@@ -40,15 +40,43 @@ make app       # assemble ./build/SizeEnforcer.app (ad-hoc signed)
   SF Symbol.
 - The app icon is an Icon Composer document (`design/AppIcon.icon`). `make app`
   compiles it with `actool` into the bundle's top-level
-  `Contents/Resources/Assets.car` (plus a fallback `AppIcon.icns`) and points the
-  Info.plist `CFBundleIconName`/`CFBundleIconFile` keys at it. This likewise
-  needs a full **Xcode**, and only takes effect in the assembled `.app`, not
-  `make run`.
+  `Contents/Resources/Assets.car` (plus a fallback `AppIcon.icns`) and merges the
+  emitted `CFBundleIconName`/`CFBundleIconFile` keys into the bundle Info.plist.
+  This likewise needs a full **Xcode**, and only takes effect in the assembled
+  `.app`, not `make run`.
+- The app version is single-sourced in `Resources/Info.plist`
+  (`CFBundleShortVersionString` is the marketing version; `CFBundleVersion` is a
+  monotonic build number). `make app` copies this file into the bundle as
+  `Contents/Info.plist` before merging in the icon keys, so the `.app` version
+  always matches it. Bump it with `scripts/bump-version.sh` — never edit the
+  version by hand in `make-app.sh`.
 - Tests use **Swift Testing**. With **Command Line Tools only** (no Xcode),
   plain `swift test` cannot locate the Swift Testing runtime; `make test`
   detects this and adds the required framework/rpath flags automatically.
 - Also verify UI/OS-integration changes by building and running the app.
 - `scripts/make-app.sh <dir>` assembles the `.app` into a custom directory.
+
+## Continuous integration and releases
+
+GitHub Actions workflows live in `.github/workflows/`:
+
+- `ci.yml` — on pull requests and pushes to `main`, runs `make check`,
+  `make build`, and `make test` on `macos-latest`.
+- `pinact.yml` — on pull requests, verifies GitHub Actions are pinned to commit
+  SHAs. Requires a GitHub App: repository variable `ACTIONS_APP_ID` and secret
+  `ACTIONS_APP_PRIVATE_KEY` (the workflow fails until these are configured).
+- `release.yml` — on pushes to `main`, reads `CFBundleShortVersionString` from
+  `Resources/Info.plist`; if no matching `v<version>` tag exists yet, it tags,
+  runs `make app`, zips the bundle, publishes a GitHub Release, and opens/merges
+  a cask update on the Homebrew tap. Runs on `macos-26` because actool needs
+  Xcode 26 to compile the Icon Composer icon. The Homebrew step needs the
+  `dayflower/homebrew-tap` repository and a secret `HOMEBREW_GITHUB_API_TOKEN`
+  (a PAT with push access); the release itself works without it.
+
+The release flow is version-driven: run `scripts/bump-version.sh <version | patch
+| minor | major>` on a clean `main` to open a version-bump PR that edits
+`Resources/Info.plist`. Merging that PR is what triggers `release.yml` to tag and
+publish. The cask template is `.github/homebrew/sizeenforcer.rb.mustache`.
 
 ## Layout
 
@@ -59,7 +87,12 @@ make app       # assemble ./build/SizeEnforcer.app (ad-hoc signed)
   the rest stays `internal`. Value types live in `Models/`, the SwiftUI
   settings window in `Settings/`.
 - `Tests/SizeEnforcerKitTests/` — Swift Testing suite for `SizeEnforcerKit`.
+- `Resources/Info.plist` — the app's Info.plist and the single source of truth
+  for the version; `make app` copies it into the bundle.
 - `scripts/make-app.sh` — builds a release binary and wraps it in a `.app`.
+- `scripts/bump-version.sh` — bumps the version in `Resources/Info.plist` and
+  opens a PR that drives the release workflow.
+- `.github/` — CI/release workflows and the Homebrew cask template.
 - `notes/` — design notes (Japanese).
 
 ## Architecture notes
