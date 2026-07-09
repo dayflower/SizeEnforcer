@@ -6,7 +6,6 @@
 set -euo pipefail
 
 APP_NAME="SizeEnforcer"
-BUNDLE_ID="com.example.dayflower.SizeEnforcer"
 MIN_MACOS="15.0"
 APP_ICON="AppIcon"
 
@@ -42,6 +41,13 @@ for bundle in "$PRODUCTS_DIR"/*.bundle; do
     cp -R "$bundle" "$APP_DIR/Contents/Resources/"
 done
 
+# The version and other bundle metadata live in the checked-in Resources/Info.plist
+# (CFBundleShortVersionString is the marketing version; CFBundleVersion is a
+# monotonic build number). scripts/bump-version.sh edits it and the release
+# workflow reads it, so the .app version is single-sourced there. The icon keys
+# are merged in from actool's partial plist below.
+cp "$ROOT_DIR/Resources/Info.plist" "$APP_DIR/Contents/Info.plist"
+
 # Compile the Icon Composer app icon (design/AppIcon.icon) into the bundle.
 # actool emits a compiled Assets.car (holding the icon) plus a fallback
 # AppIcon.icns into Contents/Resources; the referencing CFBundleIcon* keys are
@@ -56,38 +62,14 @@ xcrun actool "$ROOT_DIR/design/$APP_ICON.icon" \
     --minimum-deployment-target "$MIN_MACOS" \
     --output-format human-readable-text
 
-cat > "$APP_DIR/Contents/Info.plist" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleName</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleDisplayName</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleExecutable</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleIdentifier</key>
-    <string>$BUNDLE_ID</string>
-    <key>CFBundleIconFile</key>
-    <string>$APP_ICON</string>
-    <key>CFBundleIconName</key>
-    <string>$APP_ICON</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>$MIN_MACOS</string>
-    <key>LSUIElement</key>
-    <true/>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-</dict>
-</plist>
-PLIST
+# Merge the icon keys actool emitted (CFBundleIconName etc.) into the bundle
+# Info.plist, then ensure the icon-name/file keys are present even if actool's
+# partial plist omitted them.
+/usr/libexec/PlistBuddy -c "Merge $OUT_DIR/actool-partial.plist" "$APP_DIR/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Delete :CFBundleIconName" "$APP_DIR/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :CFBundleIconName string $APP_ICON" "$APP_DIR/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Delete :CFBundleIconFile" "$APP_DIR/Contents/Info.plist" 2>/dev/null || true
+/usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string $APP_ICON" "$APP_DIR/Contents/Info.plist"
 
 echo "==> Code signing (ad-hoc)"
 codesign --force --deep --sign - "$APP_DIR"

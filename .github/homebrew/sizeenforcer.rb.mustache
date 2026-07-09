@@ -1,0 +1,20 @@
+cask "sizeenforcer" do
+  version "{{version}}"
+  sha256 "{{artifact.sha256}}"
+
+  url "{{artifact.url}}",
+      verified: "github.com/dayflower/SizeEnforcer/"
+  name "SizeEnforcer"
+  desc "Menu-bar app that resizes other apps' windows to preset sizes"
+  homepage "https://github.com/dayflower/SizeEnforcer"
+
+  depends_on macos: :sequoia
+
+  app "SizeEnforcer.app"
+
+  caveats <<~EOS
+    This application is signed with an ad-hoc signature.
+    You need to run 'xattr -dr com.apple.quarantine /Applications/SizeEnforcer.app'
+    after installation to open it.
+  EOS
+end
