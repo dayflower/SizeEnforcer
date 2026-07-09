@@ -38,6 +38,12 @@ make app       # assemble ./build/SizeEnforcer.app (ad-hoc signed)
   `DEVELOPER_DIR`). When running via `make run`/`swift run` (the `native` build
   system), the catalog is uncompiled and the tray icon silently falls back to an
   SF Symbol.
+- The app icon is an Icon Composer document (`design/AppIcon.icon`). `make app`
+  compiles it with `actool` into the bundle's top-level
+  `Contents/Resources/Assets.car` (plus a fallback `AppIcon.icns`) and points the
+  Info.plist `CFBundleIconName`/`CFBundleIconFile` keys at it. This likewise
+  needs a full **Xcode**, and only takes effect in the assembled `.app`, not
+  `make run`.
 - Tests use **Swift Testing**. With **Command Line Tools only** (no Xcode),
   plain `swift test` cannot locate the Swift Testing runtime; `make test`
   detects this and adds the required framework/rpath flags automatically.
