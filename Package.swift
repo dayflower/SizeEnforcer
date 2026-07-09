@@ -9,7 +9,10 @@ let package = Package(
     targets: [
         .target(
             name: "SizeEnforcerKit",
-            path: "Sources/SizeEnforcerKit"
+            path: "Sources/SizeEnforcerKit",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .executableTarget(
             name: "SizeEnforcer",

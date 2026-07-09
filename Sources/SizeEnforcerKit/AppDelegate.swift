@@ -25,10 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            button.image = NSImage(
-                systemSymbolName: "rectangle.dashed",
-                accessibilityDescription: "SizeEnforcer"
-            )
+            button.image = statusBarImage()
         }
 
         let menu = NSMenu()
@@ -126,5 +123,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return name
         }
         return "\(name) \(version)"
+    }
+
+    /// Loads the bundled tray icon, sized to fit the menu bar and rendered as a
+    /// template so it adapts to the menu bar's light/dark appearance. Falls back
+    /// to an SF Symbol if the resource is unavailable.
+    private func statusBarImage() -> NSImage? {
+        if let image = Bundle.module.image(forResource: "TrayIcon") {
+            image.size = NSSize(width: 18, height: 18)
+            image.isTemplate = true
+            image.accessibilityDescription = "SizeEnforcer"
+            return image
+        }
+        return NSImage(
+            systemSymbolName: "rectangle.dashed",
+            accessibilityDescription: "SizeEnforcer"
+        )
     }
 }

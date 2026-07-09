@@ -26,6 +26,18 @@ make app       # assemble ./build/SizeEnforcer.app (ad-hoc signed)
 ```
 
 - Toolchain: Swift 6, targeting macOS 14 (Sonoma) or later.
+- The menu-bar icon lives in an asset catalog
+  (`Sources/SizeEnforcerKit/Resources/Assets.xcassets`). The default `native`
+  build system copies asset catalogs verbatim, so `make app` builds with the
+  Swift Build engine (`swift build --build-system swiftbuild`) instead: it
+  compiles the catalog into a loadable `Assets.car` and emits a properly
+  structured resource bundle whose `Bundle.module` accessor finds
+  `Contents/Resources` (`--arch arm64` keeps it a single-architecture build).
+  This still needs a full **Xcode** for actool;
+  select it with `sudo xcode-select -s /Applications/Xcode.app` (or set
+  `DEVELOPER_DIR`). When running via `make run`/`swift run` (the `native` build
+  system), the catalog is uncompiled and the tray icon silently falls back to an
+  SF Symbol.
 - Tests use **Swift Testing**. With **Command Line Tools only** (no Xcode),
   plain `swift test` cannot locate the Swift Testing runtime; `make test`
   detects this and adds the required framework/rpath flags automatically.

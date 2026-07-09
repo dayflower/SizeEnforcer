@@ -15,14 +15,31 @@ APP_DIR="$OUT_DIR/$APP_NAME.app"
 
 cd "$ROOT_DIR"
 
-echo "==> Building (release)…"
-swift build -c release
-BIN_PATH="$(swift build -c release --show-bin-path)/$APP_NAME"
+# Build with the Swift Build engine (`--build-system swiftbuild`), the same
+# engine Xcode uses. Unlike the default `native` build system, it compiles the
+# asset catalog that holds the tray icon into a loadable `Assets.car` and emits a
+# properly structured resource bundle (Contents/Resources/Assets.car +
+# Info.plist). It still needs a full Xcode for actool; select it with
+# `xcode-select -s` or DEVELOPER_DIR.
+BUILD_FLAGS=(--build-system swiftbuild -c release --arch arm64)
+echo "==> Building (release, swiftbuild)…"
+swift build "${BUILD_FLAGS[@]}"
+PRODUCTS_DIR="$(swift build "${BUILD_FLAGS[@]}" --show-bin-path)"
+BIN_PATH="$PRODUCTS_DIR/$APP_NAME"
 
 echo "==> Assembling $APP_DIR"
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS"
+mkdir -p "$APP_DIR/Contents/Resources"
 cp "$BIN_PATH" "$APP_DIR/Contents/MacOS/$APP_NAME"
+
+# Copy SwiftPM resource bundles (e.g. the tray icon) into Contents/Resources,
+# where the generated `Bundle.module` accessor looks first
+# (Bundle.main.resourceURL). Each bundle already carries a compiled Assets.car.
+for bundle in "$PRODUCTS_DIR"/*.bundle; do
+    [ -e "$bundle" ] || continue
+    cp -R "$bundle" "$APP_DIR/Contents/Resources/"
+done
 
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
