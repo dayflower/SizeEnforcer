@@ -22,6 +22,10 @@ final class WindowPicker: NSObject, PickerOverlayViewDelegate {
         window.overlayView.highlightMode = highlightMode
         overlay = window
 
+        // Show a crosshair for the whole session, mirroring the macOS
+        // screenshot picker. Balanced by NSCursor.pop() in finish().
+        NSCursor.crosshair.push()
+
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
 
@@ -32,12 +36,18 @@ final class WindowPicker: NSObject, PickerOverlayViewDelegate {
     }
 
     private func finish(with selection: WindowInfo?) {
+        // Guard against a double finish so the crosshair push/pop stays balanced.
+        guard overlay != nil else { return }
+
         let completion = self.completion
         self.completion = nil
         hoveredWindow = nil
 
         overlay?.orderOut(nil)
         overlay = nil
+
+        // Balances the NSCursor.crosshair.push() in begin().
+        NSCursor.pop()
 
         completion?(selection)
     }

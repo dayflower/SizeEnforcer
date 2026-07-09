@@ -53,7 +53,10 @@ final class PickerOverlayView: NSView {
         trackingAreas.forEach(removeTrackingArea)
         let area = NSTrackingArea(
             rect: bounds,
-            options: [.activeAlways, .mouseMoved, .mouseEnteredAndExited, .inVisibleRect],
+            options: [
+                .activeAlways, .mouseMoved, .mouseEnteredAndExited, .cursorUpdate,
+                .inVisibleRect,
+            ],
             owner: self,
             userInfo: nil
         )
@@ -68,6 +71,13 @@ final class PickerOverlayView: NSView {
 
     override func mouseEntered(with event: NSEvent) {
         forwardHover()
+    }
+
+    override func cursorUpdate(with event: NSEvent) {
+        // Keep the crosshair asserted while the cursor tracks over the overlay;
+        // AppKit would otherwise reset it to the arrow on each move. The session
+        // teardown restores the previous cursor via NSCursor.pop() in WindowPicker.
+        NSCursor.crosshair.set()
     }
 
     override func mouseDown(with event: NSEvent) {
