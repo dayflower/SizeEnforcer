@@ -68,7 +68,7 @@ jobs:
 
       - name: Update Homebrew tap
         if: steps.version.outputs.release == 'true'
-        uses: dayflower/brew-up@3f2a9919dd8b749fef56f762e911d42df31435d4 # v0.1.5
+        uses: dayflower/brew-up@d54916a2db1d7182a4681a6e72adc01022f37794 # v1.1.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
