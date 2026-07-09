@@ -19,7 +19,7 @@ target dimensions.
 
 ## Requirements
 
-- macOS 14 (Sonoma) or later
+- macOS 15 (Sequoia) or later
 - Swift 6 toolchain (for building from source)
 - **Accessibility permission** — SizeEnforcer resizes other apps' windows via
   the Accessibility API, so it must be granted access under

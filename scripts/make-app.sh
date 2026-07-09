@@ -7,7 +7,7 @@ set -euo pipefail
 
 APP_NAME="SizeEnforcer"
 BUNDLE_ID="com.example.dayflower.SizeEnforcer"
-MIN_MACOS="14.0"
+MIN_MACOS="15.0"
 APP_ICON="AppIcon"
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"

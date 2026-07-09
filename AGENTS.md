@@ -25,7 +25,7 @@ make fix       # reformat sources in place with swift-format
 make app       # assemble ./build/SizeEnforcer.app (ad-hoc signed)
 ```
 
-- Toolchain: Swift 6, targeting macOS 14 (Sonoma) or later.
+- Toolchain: Swift 6, targeting macOS 15 (Sequoia) or later.
 - The menu-bar icon lives in an asset catalog
   (`Sources/SizeEnforcerKit/Resources/Assets.xcassets`). The default `native`
   build system copies asset catalogs verbatim, so `make app` builds with the
