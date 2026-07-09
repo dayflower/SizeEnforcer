@@ -29,16 +29,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
-        let versionItem = NSMenuItem(title: appVersionTitle(), action: nil, keyEquivalent: "")
-        versionItem.isEnabled = false
-        menu.addItem(versionItem)
-        menu.addItem(.separator())
         let resizeItem = menu.addItem(
             withTitle: "Resize window…",
             action: #selector(pickWindow),
             keyEquivalent: ""
         )
         resizeItem.target = self
+        resizeItem.image = NSImage(
+            systemSymbolName: "square.resize",
+            accessibilityDescription: nil
+        )
         resizeMenuItem = resizeItem
         menu.addItem(
             withTitle: "Settings…",
@@ -46,6 +46,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: ","
         ).target = self
         menu.addItem(.separator())
+        let versionItem = NSMenuItem(title: appVersionTitle(), action: nil, keyEquivalent: "")
+        versionItem.isEnabled = false
+        menu.addItem(versionItem)
         menu.addItem(
             withTitle: "Quit",
             action: #selector(quit),
